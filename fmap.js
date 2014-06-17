@@ -28,7 +28,8 @@ var VK = {
 		params = {
 			owner_id: album.owner_id,
 			album_id: album.id,
-			offset: offset || 0
+			offset: offset || 0,
+			extended: 1
 		};
 		return VK.api(method, params);
 	},
@@ -134,18 +135,43 @@ function findPhotos(user) {
 
 function createMap() {
 	var map = new ymaps.Map("map", {
-		center: [60, 30], 
+		center: [60, 30],
 		zoom: 7
 	});
 	return map;
 }
 
 function addPhotos(photos, map) {
+	var iconLayoutBig = ymaps.templateLayoutFactory.createClass(
+    '<div style="\
+    	width: 40px;\
+    	height: 40px;\
+    	background: url(\'{{ options.src }}\');\
+    	background-size: contain;\
+    	outline: 1px solid rgba(0, 0, 0, 0.1);\
+    	border: 2px solid #FFF;\
+    	box-shadow: 1px 1px 1px rgba(0, 0, 0, 0.3);">\
+    </div>'
+	);
+	var iconLayoutSmall = ymaps.templateLayoutFactory.createClass(
+    '<div style="\
+    	width: 12px;\
+    	height: 12px;\
+    	background: url(\'{{ options.src }}\');\
+    	background-size: contain;\
+    	outline: 1px solid rgba(0, 0, 0, 0.1);\
+    	border: 1px solid #FFF;">\
+    </div>'
+	);
+
 	var clusterer = new ymaps.Clusterer();
 	clusterer.add(photos.map(function(photo) {
 		return photo.placemark = new ymaps.Placemark ([photo.lat, photo.long], {
 			balloonContentHeader: photo.id,
 			balloonContent: '<a target="_blank" href="' + photo.url + '"><img src="' + photo.photo_130 + '"></a>'
+		}, {
+			iconLayout: photo.likes.count > 10 ? iconLayoutBig : iconLayoutSmall,
+			iconSrc: photo.photo_75,
 		});
 	}));
 	map.geoObjects.add(clusterer);
