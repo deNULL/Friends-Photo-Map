@@ -143,62 +143,32 @@ function createMap() {
 
 function addPhotos(photos, map) {
 	var clusterLayout = ymaps.templateLayoutFactory.createClass(
-    '<div style="\
-    	width: 40px;\
-    	height: 40px;\
-    	background: url(\'{{ properties.iconSrc }}\');\
-    	background-size: cover;\
-    	background-position: center;\
-    	outline: 1px solid rgba(0, 0, 0, 0.1);\
-    	border: 2px solid #FFF;\
-    	box-shadow: 2px 2px 0px #fff, 3px 3px 0px rgba(0, 0, 0, 0.1), 3px 3px 2px rgba(0, 0, 0, 0.3);\
-    	text-align: center;">\
-    	<div style="\
-				margin: 13px 0;\
-				padding: 1px 5px 2px;\
-				font-family: Verdana;\
-				font-size: 11px;\
-				color: #FFF;\
-				background: rgba(0, 0, 0, 0.6);\
-				display: inline-block;\
-				border-radius: 7px;">\
-					{% if properties.geoObjects.length > 999 %}999+{% else %}{{ properties.geoObjects.length }}{% endif %}\
-			</div>\
+    '<div class="photoIcon cluster" style="background-image: url(\'{{ properties.iconSrc }}\');">\
+    	<div>{% if properties.geoObjects.length > 999 %}999+{% else %}{{ properties.geoObjects.length }}{% endif %}</div>\
     </div>', {
     	build: function () {
-    		this.getData().properties.set('iconSrc', this.getData().properties.get('geoObjects')[0].properties.get('iconSrc'));
+    		this.getData().properties.set('iconSrc', this.getData().properties.get('geoObjects')[0].options.get('iconSrc'));
         this.constructor.superclass.build.call(this);
       }
     }
 	);
 
 	var iconLayoutBig = ymaps.templateLayoutFactory.createClass(
-    '<div style="\
-    	width: 40px;\
-    	height: 40px;\
-    	background: url(\'{{ options.src }}\');\
-    	background-size: cover;\
-    	background-position: center;\
-    	outline: 1px solid rgba(0, 0, 0, 0.1);\
-    	border: 2px solid #FFF;\
-    	box-shadow: 1px 1px 1px rgba(0, 0, 0, 0.3);">\
-    </div>'
+    '<div class="photoIcon" style="background-image: url(\'{{ options.src }}\');"></div>'
 	);
 	var iconLayoutSmall = ymaps.templateLayoutFactory.createClass(
-    '<div style="\
-    	width: 12px;\
-    	height: 12px;\
-    	background: url(\'{{ options.src }}\');\
-    	background-size: cover;\
-    	background-position: center;\
-    	outline: 1px solid rgba(0, 0, 0, 0.1);\
-    	border: 1px solid #FFF;">\
-    </div>'
+    '<div class="photoIcon small" style="background-image: url(\'{{ options.src }}\');"></div>'
 	);
 
 	var clusterer = new ymaps.Clusterer({
 		gridSize: 64,
 		clusterIconLayout: clusterLayout,
+		clusterIconShape: {
+      type: 'Rectangle',
+      coordinates: [
+        [-22, -22], [22, 22]
+      ]
+    }
 	});
 	clusterer.add(photos.map(function(photo) {
 		return photo.placemark = new ymaps.Placemark ([photo.lat, photo.long], {
@@ -208,7 +178,14 @@ function addPhotos(photos, map) {
 		}, {
 			iconLayout: photo.likes.count > 5 ? iconLayoutBig : iconLayoutSmall,
 			iconSrc: photo.photo_75,
-    	iconImageSize: photo.likes.count > 10 ? [42, 42] : [14, 14],
+    	iconShape: {
+        type: 'Rectangle',
+        coordinates: photo.likes.count > 10 ? [
+          [-22, -22], [22, 22]
+        ] : [
+          [-7, -7], [7, 7]
+        ]
+      }
 		});
 	}));
 	map.geoObjects.add(clusterer);
