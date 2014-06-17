@@ -161,7 +161,9 @@ function addPhotos(photos, map) {
 	);
 
 	var clusterer = new ymaps.Clusterer({
+		margin: 23,
 		gridSize: 64,
+		minClusterSize: 5,
 		clusterIconLayout: clusterLayout,
 		clusterIconShape: {
       type: 'Rectangle',
@@ -171,16 +173,17 @@ function addPhotos(photos, map) {
     }
 	});
 	clusterer.add(photos.map(function(photo) {
+		var isBig = false; // photo.likes.count > 20
 		return photo.placemark = new ymaps.Placemark ([photo.lat, photo.long], {
 			balloonContentHeader: photo.id,
 			balloonContent: '<a target="_blank" href="' + photo.url + '"><img src="' + photo.photo_130 + '"></a>',
 			iconSrc: photo.photo_75,
 		}, {
-			iconLayout: photo.likes.count > 5 ? iconLayoutBig : iconLayoutSmall,
+			iconLayout: isBig ? iconLayoutBig : iconLayoutSmall,
 			iconSrc: photo.photo_75,
     	iconShape: {
         type: 'Rectangle',
-        coordinates: photo.likes.count > 10 ? [
+        coordinates: isBig ? [
           [-22, -22], [22, 22]
         ] : [
           [-7, -7], [7, 7]
