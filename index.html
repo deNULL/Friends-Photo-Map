@@ -3,8 +3,85 @@
 <head>
 	<meta charset="UTF-8">
 	<title>Friends Photo Map</title>
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+	<script src="http://api-maps.yandex.ru/2.1/?lang=ru_RU" type="text/javascript"></script>
+	<script src="fmap.js"></script>
+	<link rel="stylesheet" href="reset.css">
+	<style>
+	.container {
+		width: 900px;
+		margin: auto;
+		position: relative;
+	}
+
+	.counters div {
+		display: none;
+		text-align: center;
+		font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+		font-size: 1.5em;
+		line-height: 100px;
+	}
+
+	.map, .counters {
+		width: 900px;
+		height: 600px;
+		position: absolute;
+		left: 0px;
+		top: 0px;
+		box-shadow: 2px 2px 5px #999;
+	}
+
+	.counters {
+		background-color: rgba(192,192,192,0.8);
+		z-index: 1;
+	}
+
+	#id {
+		width: 70px;
+		height: 15px;
+	}
+	</style>
 </head>
 <body>
-	Ololo
+	<div class="container" id="container">
+			<div class="counters" id="counters">
+				<div id="enter_id">
+					Введите ваш ID:&nbsp<textarea id="id"></textarea>
+				</div>
+				<div>
+					Ищем альбомы у друзей..&nbsp<span class="counter" id="friends"></span>
+				</div>
+				<div>
+					Ищем фото в альбомах..&nbsp<span class="counter" id="albums"></span>
+				</div>
+				<div>
+					Найдено фото с геометкой:&nbsp<span class="counter" id="photos"></span>
+				</div>
+			</div>
+			<div class="map" id="map"></div>
+	</div>
+	<script>
+		$(document).ready(function() {
+			var idDeferred = $.Deferred(),
+				userPromise = idDeferred.then(findPhotos),
+				ymapsDeferred = $.Deferred(),
+				mapPromise = ymapsDeferred.then(createMap);
+			$('#enter_id').show();
+			$('#id').keydown(function(event) {
+				if (event.which == 13) {
+					var user = $('#id').val();
+					$('#enter_id').hide();
+					idDeferred.resolve(user);
+				}
+			});
+			ymaps.ready(function() {
+				ymapsDeferred.resolve();
+			});
+			$.when(userPromise, mapPromise).done(function(userArgs, map) {
+				var photos = userArgs[0];
+				addPhotos(photos, map);
+			});
+		});
+	</script>
 </body>
 </html>
