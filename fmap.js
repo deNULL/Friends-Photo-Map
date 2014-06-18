@@ -234,7 +234,7 @@ function addPhotos(photos, map) {
 
   var clusterer = new ymaps.Clusterer({
     margin: 23,
-    gridSize: 32,
+    gridSize: 64,
     minClusterSize: 5,
     clusterIconLayout: clusterLayout,
     clusterIconShape: {
