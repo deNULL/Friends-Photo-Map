@@ -29,7 +29,7 @@ var VK = {
       owner_id: album.owner_id,
       album_id: album.id,
       offset: offset || 0,
-      //extended: 1
+      extended: 1
     };
     return VK.api(method, params);
   },
@@ -148,82 +148,90 @@ function addPhotos(photos, map) {
       <div>{% if properties.geoObjects.length > 999 %}999+{% else %}{{ properties.geoObjects.length }}{% endif %}</div>\
     </div>', {
       build: function () {
-        this.getData().properties.set('iconSrc', this.getData().properties.get('geoObjects')[0].options.get('iconSrc'));
+        var geoObjects = this.getData().properties.get('geoObjects');
+        var mostLiked;
+        var likes = -1;
+        for (var i = 1; i < geoObjects.length; i++) {
+          var photo = geoObjects[i].options.get('photo');
+          if (photo.likes.count > likes) {
+            likes = photo.likes.count;
+            mostLiked = geoObjects[i];
+          }
+        }
+        this.getData().properties.set('iconSrc', mostLiked.options.get('iconSrc'));
         this.constructor.superclass.build.call(this);
       }
     }
   );
 
-  var clusterBalloonLayout = ymaps.templateLayoutFactory.createClass(
-    '<div class="clusterBalloon">{{ properties.balloonHtml|raw }}</div>', {
-      build: function () {
-        var geoObjects = this.getData().properties.get('geoObjects');
-        var rows = [];
-        var row = [];
-        var curWidth = 0;
-        var curHeight = 0;
-        var rowWidth = 400;
-        var rowMaxHeight = 60;
-        var html = [];
-        for (var i = 0; i < geoObjects.length; i++) {
-          var photo = geoObjects[i].options.get('photo');
-          var w = photo.width || 100;
-          var h = photo.height || 100;
-          if (row.length == 0) {
-            curHeight = h;
-          }
+  var clusterBalloonLayout = ymaps.templateLayoutFactory.createClass('<div></div>', {
+    build: function () {
+      var geoObjects = this.getData().properties.get('geoObjects');
+      var rows = [];
+      var row = [];
+      var curWidth = 0;
+      var curHeight = 0;
+      var rowWidth = 400;
+      var rowMaxHeight = 60;
+      var html = [];
+      for (var i = 0; i < geoObjects.length; i++) {
+        var photo = geoObjects[i].options.get('photo');
+        var w = photo.width || 100;
+        var h = photo.height || 100;
+        if (row.length == 0) {
+          curHeight = h;
+        }
 
-          row.push({ src: photo.photo_130, width: w, height: h, unknown: !!photo.width });
+        row.push({ src: photo.photo_130, width: w, height: h, unknown: !!photo.width });
 
-          var scaledWidth = w * (curHeight / h) + 2;
-          curWidth += scaledWidth;
+        var scaledWidth = w * (curHeight / h) + 2;
+        curWidth += scaledWidth;
 
-          var rowHeight = curHeight * (rowWidth / curWidth);
-          if ((rowHeight <= rowMaxHeight) || (i == geoObjects.length - 1)) {
-            rowHeight = Math.min(rowHeight, rowMaxHeight);
+        var rowHeight = curHeight * (rowWidth / curWidth);
+        if ((rowHeight <= rowMaxHeight) || (i == geoObjects.length - 1)) {
+          rowHeight = Math.min(rowHeight, rowMaxHeight);
 
-            rows.push(row);
-            html.push('<div class="row">');
-            curWidth = 0;
-            for (var j = 0; j < row.length; j++) {
-              row[j].width *= rowHeight / row[j].height;
-              row[j].height = rowHeight;
+          rows.push(row);
+          html.push('<div class="row">');
+          curWidth = 0;
+          for (var j = 0; j < row.length; j++) {
+            row[j].width *= rowHeight / row[j].height;
+            row[j].height = rowHeight;
 
-              if ((i < geoObjects.length - 1) && (j == row.length - 1)) {
-                row[j].width = rowWidth - curWidth;
-              }
-
-              html.push('<img style="width: ' + Math.round(row[j].width) + 'px; height: ' + Math.round(row[j].height) + 'px;" src="' + row[j].src + '"/>');
-              curWidth += Math.round(row[j].width) + 2;
+            if ((i < geoObjects.length - 1) && (j == row.length - 1)) {
+              row[j].width = rowWidth - curWidth;
             }
-            html.push('</div>');
 
-            curWidth = 0;
-            curHeight = 0;
-            row = [];
+            html.push('<img style="width: ' + Math.round(row[j].width) + 'px; height: ' + Math.round(row[j].height) + 'px;" src="' + row[j].src + '"/>');
+            curWidth += Math.round(row[j].width) + 2;
           }
-        }
+          html.push('</div>');
 
-        this.e = document.createElement('div');
-        this.e.className = 'clusterBalloon';
-        this.e.innerHTML = html.join('');
-        this.getParentElement().appendChild(this.e);
-      },
-      clear: function() {
-        if (this.e) {
-          this.getParentElement().removeChild(this.e);
-          this.e = false;
+          curWidth = 0;
+          curHeight = 0;
+          row = [];
         }
-      },
-      destroy: function() {
-        this.clear();
-      },
-      rebuild: function() {
-        this.clear();
-        this.build();
       }
+
+      this.e = document.createElement('div');
+      this.e.className = 'clusterBalloon';
+      this.e.innerHTML = html.join('');
+      this.getParentElement().appendChild(this.e);
+    },
+    clear: function() {
+      if (this.e) {
+        this.getParentElement().removeChild(this.e);
+        this.e = false;
+      }
+    },
+    destroy: function() {
+      this.clear();
+    },
+    rebuild: function() {
+      this.clear();
+      this.build();
     }
-  );
+  });
 
   var iconLayoutBig = ymaps.templateLayoutFactory.createClass(
     '<div class="photoIcon" style="background-image: url(\'{{ options.src }}\');"></div>'
